@@ -1,0 +1,169 @@
+name: Create Production Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - custom
+      custom_version:
+        description: 'Custom version (only if bump_type=custom, e.g., v1.0.0)'
+        required: false
+        type: string
+      release_notes:
+        description: 'Release notes (optional)'
+        required: false
+        type: string
+
+jobs:
+  create-prod-tag:
+    name: Create Production Tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get last production tag
+        id: last_tag
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 --match="v[0-9]*.[0-9]*.[0-9]*" 2>/dev/null || echo "v0.0.0")
+          echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
+          echo "Last production tag: $LAST_TAG"
+
+      - name: Calculate next version
+        id: next_version
+        run: |
+          LAST_TAG="${{ steps.last_tag.outputs.last_tag }}"
+          BUMP_TYPE="${{ github.event.inputs.bump_type }}"
+          CUSTOM_VERSION="${{ github.event.inputs.custom_version }}"
+
+          # Remove 'v' prefix for calculation
+          LAST_VERSION=${LAST_TAG#v}
+
+          # Split version into parts
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$LAST_VERSION"
+
+          if [ "$BUMP_TYPE" = "custom" ]; then
+            if [ -z "$CUSTOM_VERSION" ]; then
+              echo "❌ Error: Custom version is required when bump_type is 'custom'"
+              exit 1
+            fi
+            VERSION="$CUSTOM_VERSION"
+          else
+            case "$BUMP_TYPE" in
+              major)
+                MAJOR=$((MAJOR + 1))
+                MINOR=0
+                PATCH=0
+                ;;
+              minor)
+                MINOR=$((MINOR + 1))
+                PATCH=0
+                ;;
+              patch)
+                PATCH=$((PATCH + 1))
+                ;;
+            esac
+            VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Next version: $VERSION (bump: $BUMP_TYPE)"
+
+      - name: Validate version format
+        run: |
+          VERSION="${{ steps.next_version.outputs.version }}"
+
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Error: Version must follow semantic versioning format (e.g., v1.0.0)"
+            echo "   Provided: $VERSION"
+            exit 1
+          fi
+
+          echo "✅ Version format is valid: $VERSION"
+
+      - name: Check if tag already exists
+        run: |
+          VERSION="${{ steps.next_version.outputs.version }}"
+
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "❌ Error: Tag $VERSION already exists"
+            echo ""
+            echo "Existing production tags:"
+            git tag -l "v[0-9]*.[0-9]*.[0-9]*" --sort=-version:refname | head -5
+            exit 1
+          fi
+
+          echo "✅ Tag $VERSION does not exist yet"
+
+      - name: Get changelog
+        id: changelog
+        run: |
+          LAST_TAG="${{ steps.last_tag.outputs.last_tag }}"
+
+          CHANGELOG=$(git log $LAST_TAG..HEAD --oneline --format='- %s' | head -10)
+
+          # Use delimiter to handle multiline output
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create production tag
+        run: |
+          VERSION="${{ steps.next_version.outputs.version }}"
+          LAST_TAG="${{ steps.last_tag.outputs.last_tag }}"
+          RELEASE_NOTES="${{ github.event.inputs.release_notes }}"
+          BUMP_TYPE="${{ github.event.inputs.bump_type }}"
+
+          # Create tag message using heredoc
+          if [ -n "$RELEASE_NOTES" ]; then
+            git tag -a "$VERSION" -m "Production release $VERSION ($BUMP_TYPE)
+
+$RELEASE_NOTES"
+          else
+            git tag -a "$VERSION" -m "Production release $VERSION ($BUMP_TYPE)
+
+Changes since $LAST_TAG:
+${{ steps.changelog.outputs.changelog }}"
+          fi
+
+          echo "✅ Created tag: $VERSION"
+
+      - name: Push tag
+        run: |
+          VERSION="${{ steps.next_version.outputs.version }}"
+          git push origin "$VERSION"
+          echo "✅ Pushed tag: $VERSION"
+
+      - name: Summary
+        run: |
+          VERSION="${{ steps.next_version.outputs.version }}"
+          LAST_TAG="${{ steps.last_tag.outputs.last_tag }}"
+          BUMP_TYPE="${{ github.event.inputs.bump_type }}"
+
+          echo "🎉 Production tag created successfully!"
+          echo ""
+          echo "Previous version: $LAST_TAG"
+          echo "New version: $VERSION (bump: $BUMP_TYPE)"
+          echo ""
+          echo "View tag: https://github.com/${{ github.repository }}/releases/tag/$VERSION"
+          echo ""
+          echo "Dashboard engineers can now use:"
+          echo "  go get github.com/eukarya-inc/reearth-proto@$VERSION"
+          echo ""
+          echo "Changes:"
+          echo "${{ steps.changelog.outputs.changelog }}"
