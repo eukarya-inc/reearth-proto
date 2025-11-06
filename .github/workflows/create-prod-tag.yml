@@ -130,17 +130,24 @@ jobs:
           BUMP_TYPE: ${{ github.event.inputs.bump_type }}
           CHANGELOG: ${{ steps.changelog.outputs.changelog }}
         run: |
-          # Create tag message using heredoc
+          # Create tag message file
           if [ -n "$RELEASE_NOTES" ]; then
-            git tag -a "$VERSION" -m "Production release $VERSION ($BUMP_TYPE)
+            cat > /tmp/tag_message.txt <<EOF
+          Production release $VERSION ($BUMP_TYPE)
 
-$RELEASE_NOTES"
+          $RELEASE_NOTES
+          EOF
           else
-            git tag -a "$VERSION" -m "Production release $VERSION ($BUMP_TYPE)
+            cat > /tmp/tag_message.txt <<EOF
+          Production release $VERSION ($BUMP_TYPE)
 
-Changes since $LAST_TAG:
-$CHANGELOG"
+          Changes since $LAST_TAG:
+          $CHANGELOG
+          EOF
           fi
+
+          # Create tag using message file
+          git tag -a "$VERSION" -F /tmp/tag_message.txt
 
           echo "✅ Created tag: $VERSION"
 
