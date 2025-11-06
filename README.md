@@ -79,4 +79,35 @@ When updating proto files in CMS or Visualizer:
 2. Test locally: `make grpc && go test ./...`
 3. Push to main branch in CMS or Visualizer
 4. Wait for auto-sync (or trigger manually in reearth-proto GitHub Actions)
-5. For production releases, create a tag: `make tag-prod VERSION=v1.0.0`
+
+## Production Releases
+
+### When to Create Production Tags
+
+- **Before Dashboard production deployment** - Lock to stable proto version
+- **After coordinated CMS/Visualizer releases** - When both services are stable
+- **For breaking changes** - Major version bump when APIs change
+
+### Creating Production Tags
+
+```bash
+# Review changes since last production release
+make changes
+
+# List existing production tags
+make list-tags
+
+# Create new production tag
+make tag-prod VERSION=v1.0.0
+```
+
+### Semantic Versioning
+
+- **v1.0.0 → v2.0.0**: Breaking changes (field removed, RPC signature changed)
+- **v1.0.0 → v1.1.0**: New features, backward compatible (new RPC added)
+- **v1.0.0 → v1.0.1**: Bug fixes, no API changes
+
+### Development vs Production Tags
+
+- **Dev tags** (auto): `v0.1.0-dev.20251106190155` - Auto-created every 6 hours
+- **Prod tags** (manual): `v1.0.0` - Manually created for stable releases
