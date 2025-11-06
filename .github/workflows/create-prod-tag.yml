@@ -123,12 +123,13 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Create production tag
+        env:
+          VERSION: ${{ steps.next_version.outputs.version }}
+          LAST_TAG: ${{ steps.last_tag.outputs.last_tag }}
+          RELEASE_NOTES: ${{ github.event.inputs.release_notes }}
+          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
+          CHANGELOG: ${{ steps.changelog.outputs.changelog }}
         run: |
-          VERSION="${{ steps.next_version.outputs.version }}"
-          LAST_TAG="${{ steps.last_tag.outputs.last_tag }}"
-          RELEASE_NOTES="${{ github.event.inputs.release_notes }}"
-          BUMP_TYPE="${{ github.event.inputs.bump_type }}"
-
           # Create tag message using heredoc
           if [ -n "$RELEASE_NOTES" ]; then
             git tag -a "$VERSION" -m "Production release $VERSION ($BUMP_TYPE)
@@ -138,32 +139,35 @@ $RELEASE_NOTES"
             git tag -a "$VERSION" -m "Production release $VERSION ($BUMP_TYPE)
 
 Changes since $LAST_TAG:
-${{ steps.changelog.outputs.changelog }}"
+$CHANGELOG"
           fi
 
           echo "✅ Created tag: $VERSION"
 
       - name: Push tag
+        env:
+          VERSION: ${{ steps.next_version.outputs.version }}
         run: |
-          VERSION="${{ steps.next_version.outputs.version }}"
           git push origin "$VERSION"
           echo "✅ Pushed tag: $VERSION"
 
       - name: Summary
+        env:
+          VERSION: ${{ steps.next_version.outputs.version }}
+          LAST_TAG: ${{ steps.last_tag.outputs.last_tag }}
+          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
+          CHANGELOG: ${{ steps.changelog.outputs.changelog }}
+          REPO: ${{ github.repository }}
         run: |
-          VERSION="${{ steps.next_version.outputs.version }}"
-          LAST_TAG="${{ steps.last_tag.outputs.last_tag }}"
-          BUMP_TYPE="${{ github.event.inputs.bump_type }}"
-
           echo "🎉 Production tag created successfully!"
           echo ""
           echo "Previous version: $LAST_TAG"
           echo "New version: $VERSION (bump: $BUMP_TYPE)"
           echo ""
-          echo "View tag: https://github.com/${{ github.repository }}/releases/tag/$VERSION"
+          echo "View tag: https://github.com/$REPO/releases/tag/$VERSION"
           echo ""
           echo "Dashboard engineers can now use:"
           echo "  go get github.com/eukarya-inc/reearth-proto@$VERSION"
           echo ""
           echo "Changes:"
-          echo "${{ steps.changelog.outputs.changelog }}"
+          echo "$CHANGELOG"
