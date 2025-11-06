@@ -1,0 +1,32 @@
+name: Auto-tag Development
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  tag-dev:
+    name: Create Development Tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create Development Tag
+        run: |
+          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.0")
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          TAG="${VERSION}-dev.${TIMESTAMP}"
+
+          echo "Creating development tag: ${TAG}"
+          git tag -a "${TAG}" -m "Development release ${TIMESTAMP}"
+          git push origin "${TAG}"
+
+          echo "✅ Created tag: ${TAG}"
