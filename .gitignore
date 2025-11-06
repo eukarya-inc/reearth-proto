@@ -1,5 +1,2 @@
-# Generated code
-gen/
-
 # Buf cache
 .buf/

@@ -1,9 +1,4 @@
 version: v2
-modules:
-  - path: cms
-    name: buf.build/eukarya-inc/reearth-cms
-  - path: visualizer
-    name: buf.build/eukarya-inc/reearth-visualizer
 breaking:
   use:
     - FILE
