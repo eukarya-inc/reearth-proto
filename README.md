@@ -90,6 +90,16 @@ When updating proto files in CMS or Visualizer:
 
 ### Creating Production Tags
 
+**Option 1: Via GitHub UI (Recommended)**
+
+1. Go to https://github.com/eukarya-inc/reearth-proto/actions/workflows/create-prod-tag.yml
+2. Click "Run workflow"
+3. Enter version (e.g., `v1.0.0`)
+4. Optionally add release notes
+5. Click "Run workflow"
+
+**Option 2: Via CLI**
+
 ```bash
 # Review changes since last production release
 make changes
@@ -99,6 +109,15 @@ make list-tags
 
 # Create new production tag
 make tag-prod VERSION=v1.0.0
+```
+
+**Option 3: Via gh CLI**
+
+```bash
+gh workflow run create-prod-tag.yml \
+  --repo eukarya-inc/reearth-proto \
+  -f version=v1.0.0 \
+  -f release_notes="Production release with new features"
 ```
 
 ### Semantic Versioning
