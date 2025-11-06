@@ -63,11 +63,20 @@ make tag-dev
 make tag-prod VERSION=v1.1.0
 ```
 
+## How Proto Files are Synced
+
+Proto files are automatically synced from the OSS repositories:
+- **Source**: `reearth/reearth-cms` and `reearth/reearth-visualizer` (public GitHub repos)
+- **Frequency**: Every 6 hours via scheduled workflow
+- **Manual sync**: Can be triggered via GitHub Actions UI
+- **Auto-tagging**: When changes are detected, a new dev tag is created automatically
+
 ## For Service Maintainers
 
 When updating proto files in CMS or Visualizer:
 
 1. Make changes in your service's proto file
 2. Test locally: `make grpc && go test ./...`
-3. Sync to this repo: `make sync-proto`
-4. Tag a new version in reearth-proto
+3. Push to main branch in CMS or Visualizer
+4. Wait for auto-sync (or trigger manually in reearth-proto GitHub Actions)
+5. For production releases, create a tag: `make tag-prod VERSION=v1.0.0`
