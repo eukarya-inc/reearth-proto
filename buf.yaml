@@ -1,0 +1,13 @@
+version: v2
+modules:
+  - path: cms/v1
+  - path: visualizer/v1
+breaking:
+  use:
+    - FILE
+lint:
+  use:
+    - STANDARD
+  except:
+    - PACKAGE_VERSION_SUFFIX
+    - RPC_REQUEST_STANDARD_NAME
