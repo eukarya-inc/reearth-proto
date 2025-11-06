@@ -1,0 +1,97 @@
+name: Sync Proto from OSS Repos
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    # Allow manual trigger
+
+jobs:
+  sync-proto:
+    name: Sync Proto Files from OSS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout proto repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Download CMS Proto
+        run: |
+          curl -o cms/v1/cms.proto.new \
+            https://raw.githubusercontent.com/reearth/reearth-cms/main/server/schemas/internalapi/v1/schema.proto
+
+      - name: Download Visualizer Proto
+        run: |
+          curl -o visualizer/v1/visualizer.proto.new \
+            https://raw.githubusercontent.com/reearth/reearth-visualizer/main/server/schemas/internalapi/v1/schema.proto
+
+      - name: Check for CMS changes
+        id: check_cms
+        run: |
+          if ! cmp -s cms/v1/cms.proto cms/v1/cms.proto.new; then
+            mv cms/v1/cms.proto.new cms/v1/cms.proto
+            echo "has_cms_changes=true" >> $GITHUB_OUTPUT
+          else
+            rm cms/v1/cms.proto.new
+            echo "has_cms_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for Visualizer changes
+        id: check_vis
+        run: |
+          if ! cmp -s visualizer/v1/visualizer.proto visualizer/v1/visualizer.proto.new; then
+            mv visualizer/v1/visualizer.proto.new visualizer/v1/visualizer.proto
+            echo "has_vis_changes=true" >> $GITHUB_OUTPUT
+          else
+            rm visualizer/v1/visualizer.proto.new
+            echo "has_vis_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit changes
+        id: commit
+        if: steps.check_cms.outputs.has_cms_changes == 'true' || steps.check_vis.outputs.has_vis_changes == 'true'
+        run: |
+          CHANGES=""
+          if [ "${{ steps.check_cms.outputs.has_cms_changes }}" == "true" ]; then
+            git add cms/v1/cms.proto
+            CHANGES="${CHANGES}cms, "
+          fi
+          if [ "${{ steps.check_vis.outputs.has_vis_changes }}" == "true" ]; then
+            git add visualizer/v1/visualizer.proto
+            CHANGES="${CHANGES}visualizer, "
+          fi
+
+          # Remove trailing comma and space
+          CHANGES=${CHANGES%, }
+
+          git commit -m "feat: sync proto from OSS repos (${CHANGES})"
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+
+      - name: Create dev tag
+        if: steps.commit.outputs.has_changes == 'true'
+        run: |
+          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.0")
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          TAG="${VERSION}-dev.${TIMESTAMP}"
+
+          git tag -a "${TAG}" -m "Auto-sync from OSS repos"
+
+          echo "Created tag: ${TAG}"
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+        id: tag
+
+      - name: Push changes
+        if: steps.commit.outputs.has_changes == 'true'
+        run: |
+          git push origin main
+          git push origin ${{ steps.tag.outputs.tag }}
+
+          echo "✅ Synced proto and created tag: ${{ steps.tag.outputs.tag }}"
