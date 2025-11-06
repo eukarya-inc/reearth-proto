@@ -84,7 +84,6 @@ When updating proto files in CMS or Visualizer:
 
 ### When to Create Production Tags
 
-- **Before Dashboard production deployment** - Lock to stable proto version
 - **After coordinated CMS/Visualizer releases** - When both services are stable
 - **For breaking changes** - Major version bump when APIs change
 
