@@ -27,11 +27,17 @@ jobs:
         run: |
           curl -o cms/v1/cms.proto.new \
             https://raw.githubusercontent.com/reearth/reearth-cms/main/server/schemas/internalapi/v1/schema.proto
+          # Update go_package path
+          sed -i 's|option go_package = "proto/v1";|option go_package = "github.com/eukarya-inc/reearth-proto/gen/go/cms/v1";|' \
+            cms/v1/cms.proto.new
 
       - name: Download Visualizer Proto
         run: |
           curl -o visualizer/v1/visualizer.proto.new \
             https://raw.githubusercontent.com/reearth/reearth-visualizer/main/server/schemas/internalapi/v1/schema.proto
+          # Update go_package path
+          sed -i 's|option go_package = "proto/v1";|option go_package = "github.com/eukarya-inc/reearth-proto/gen/go/visualizer/v1";|' \
+            visualizer/v1/visualizer.proto.new
 
       - name: Check for CMS changes
         id: check_cms
