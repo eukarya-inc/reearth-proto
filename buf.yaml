@@ -7,7 +7,3 @@ modules:
 breaking:
   use:
     - FILE
-lint:
-  use:
-    - BASIC
-  allow_comment_ignores: true
