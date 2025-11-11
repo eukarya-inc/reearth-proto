@@ -17,7 +17,8 @@ breaking:
 
 # Tag development version with timestamp
 tag-dev:
-	@VERSION=$$(git describe --tags --abbrev=0 --match="v[0-9]*.[0-9]*.[0-9]" 2>/dev/null || echo "v0.1.0"); \
+	@VERSION=$$(git tag -l "v[0-9]*.[0-9]*.[0-9]*" --sort=-version:refname | grep -v '\-' | head -1); \
+	if [ -z "$${VERSION}" ]; then VERSION="v0.1.0"; fi; \
 	TIMESTAMP=$$(date +%Y%m%d%H%M%S); \
 	TAG="$${VERSION}-dev.$${TIMESTAMP}"; \
 	echo "Creating development tag: $${TAG}"; \
@@ -46,7 +47,8 @@ push:
 
 # Show changes since last production tag
 changes:
-	@LAST_TAG=$$(git describe --tags --abbrev=0 --match="v[0-9]*.[0-9]*.[0-9]*" 2>/dev/null || echo "v0.1.0"); \
+	@LAST_TAG=$$(git tag -l "v[0-9]*.[0-9]*.[0-9]*" --sort=-version:refname | grep -v '\-' | head -1); \
+	if [ -z "$${LAST_TAG}" ]; then LAST_TAG="v0.1.0"; fi; \
 	echo "Changes since last production tag ($${LAST_TAG}):"; \
 	echo ""; \
 	git log $${LAST_TAG}..HEAD --oneline --decorate
@@ -54,4 +56,4 @@ changes:
 # List all production tags
 list-tags:
 	@echo "Production tags:"; \
-	git tag -l "v[0-9]*.[0-9]*.[0-9]*" --sort=-version:refname | head -10
+	git tag -l "v[0-9]*.[0-9]*.[0-9]*" --sort=-version:refname | grep -v '\-' | head -10
