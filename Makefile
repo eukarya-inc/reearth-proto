@@ -17,7 +17,7 @@ breaking:
 
 # Tag development version with timestamp
 tag-dev:
-	@VERSION=$$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.0"); \
+	@VERSION=$$(git describe --tags --abbrev=0 --match="v[0-9]*.[0-9]*.[0-9]" 2>/dev/null || echo "v0.1.0"); \
 	TIMESTAMP=$$(date +%Y%m%d%H%M%S); \
 	TAG="$${VERSION}-dev.$${TIMESTAMP}"; \
 	echo "Creating development tag: $${TAG}"; \
