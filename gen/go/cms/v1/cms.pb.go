@@ -925,10 +925,11 @@ func (x *SortInfo) GetReverted() bool {
 }
 
 type ProjectRequest struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	ProjectIdOrAlias string                 `protobuf:"bytes,1,opt,name=project_id_or_alias,json=projectIdOrAlias,proto3" json:"project_id_or_alias,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	ProjectIdOrAlias   string                 `protobuf:"bytes,1,opt,name=project_id_or_alias,json=projectIdOrAlias,proto3" json:"project_id_or_alias,omitempty"`
+	WorkspaceIdOrAlias string                 `protobuf:"bytes,2,opt,name=workspace_id_or_alias,json=workspaceIdOrAlias,proto3" json:"workspace_id_or_alias,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *ProjectRequest) Reset() {
@@ -968,9 +969,17 @@ func (x *ProjectRequest) GetProjectIdOrAlias() string {
 	return ""
 }
 
+func (x *ProjectRequest) GetWorkspaceIdOrAlias() string {
+	if x != nil {
+		return x.WorkspaceIdOrAlias
+	}
+	return ""
+}
+
 type AliasAvailabilityRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Alias         string                 `protobuf:"bytes,1,opt,name=alias,proto3" json:"alias,omitempty"`
+	WorkspaceId   string                 `protobuf:"bytes,2,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1008,6 +1017,13 @@ func (*AliasAvailabilityRequest) Descriptor() ([]byte, []int) {
 func (x *AliasAvailabilityRequest) GetAlias() string {
 	if x != nil {
 		return x.Alias
+	}
+	return ""
+}
+
+func (x *AliasAvailabilityRequest) GetWorkspaceId() string {
+	if x != nil {
+		return x.WorkspaceId
 	}
 	return ""
 }
@@ -1445,11 +1461,12 @@ func (x *ListAssetsRequest) GetSortInfo() *SortInfo {
 }
 
 type ModelRequest struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	ProjectIdOrAlias string                 `protobuf:"bytes,1,opt,name=project_id_or_alias,json=projectIdOrAlias,proto3" json:"project_id_or_alias,omitempty"`
-	ModelIdOrAlias   string                 `protobuf:"bytes,2,opt,name=model_id_or_alias,json=modelIdOrAlias,proto3" json:"model_id_or_alias,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	ProjectIdOrAlias   string                 `protobuf:"bytes,1,opt,name=project_id_or_alias,json=projectIdOrAlias,proto3" json:"project_id_or_alias,omitempty"`
+	ModelIdOrAlias     string                 `protobuf:"bytes,2,opt,name=model_id_or_alias,json=modelIdOrAlias,proto3" json:"model_id_or_alias,omitempty"`
+	WorkspaceIdOrAlias string                 `protobuf:"bytes,3,opt,name=workspace_id_or_alias,json=workspaceIdOrAlias,proto3" json:"workspace_id_or_alias,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *ModelRequest) Reset() {
@@ -1492,6 +1509,13 @@ func (x *ModelRequest) GetProjectIdOrAlias() string {
 func (x *ModelRequest) GetModelIdOrAlias() string {
 	if x != nil {
 		return x.ModelIdOrAlias
+	}
+	return ""
+}
+
+func (x *ModelRequest) GetWorkspaceIdOrAlias() string {
+	if x != nil {
+		return x.WorkspaceIdOrAlias
 	}
 	return ""
 }
@@ -2456,11 +2480,13 @@ const file_cms_v1_cms_proto_rawDesc = "" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\"8\n" +
 	"\bSortInfo\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x1a\n" +
-	"\breverted\x18\x02 \x01(\bR\breverted\"?\n" +
+	"\breverted\x18\x02 \x01(\bR\breverted\"r\n" +
 	"\x0eProjectRequest\x12-\n" +
-	"\x13project_id_or_alias\x18\x01 \x01(\tR\x10projectIdOrAlias\"0\n" +
+	"\x13project_id_or_alias\x18\x01 \x01(\tR\x10projectIdOrAlias\x121\n" +
+	"\x15workspace_id_or_alias\x18\x02 \x01(\tR\x12workspaceIdOrAlias\"S\n" +
 	"\x18AliasAvailabilityRequest\x12\x14\n" +
-	"\x05alias\x18\x01 \x01(\tR\x05alias\"\xe9\x02\n" +
+	"\x05alias\x18\x01 \x01(\tR\x05alias\x12!\n" +
+	"\fworkspace_id\x18\x02 \x01(\tR\vworkspaceId\"\xe9\x02\n" +
 	"\x14CreateProjectRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12%\n" +
@@ -2524,10 +2550,11 @@ const file_cms_v1_cms_proto_rawDesc = "" +
 	"\n" +
 	"_page_infoB\f\n" +
 	"\n" +
-	"_sort_info\"h\n" +
+	"_sort_info\"\x9b\x01\n" +
 	"\fModelRequest\x12-\n" +
 	"\x13project_id_or_alias\x18\x01 \x01(\tR\x10projectIdOrAlias\x12)\n" +
-	"\x11model_id_or_alias\x18\x02 \x01(\tR\x0emodelIdOrAlias\"\xc6\x01\n" +
+	"\x11model_id_or_alias\x18\x02 \x01(\tR\x0emodelIdOrAlias\x121\n" +
+	"\x15workspace_id_or_alias\x18\x03 \x01(\tR\x12workspaceIdOrAlias\"\xc6\x01\n" +
 	"\x11ListModelsRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12:\n" +
