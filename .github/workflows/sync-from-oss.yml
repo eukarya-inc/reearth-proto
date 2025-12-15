@@ -84,14 +84,13 @@ jobs:
       - name: Create dev tag
         if: steps.commit.outputs.has_changes == 'true'
         run: |
-          @VERSION=$$(git tag -l "v[0-9]*.[0-9]*.[0-9]*" --sort=-version:refname | grep -v '\-' | head -1); \
-          if [ -z "$${VERSION}" ]; then VERSION="v0.1.0"; fi; \
-          TIMESTAMP=$$(date +%Y%m%d%H%M%S); \
-          TAG="$${VERSION}-dev.$${TIMESTAMP}"; \
-          echo "Creating development tag: $${TAG}"; \
-          git tag -a "$${TAG}" -m "Development release $${TIMESTAMP}"; \
-          git push origin "$${TAG}"; \
-          echo "✅ Tagged: $${TAG}"
+          VERSION=$(git tag -l "v[0-9]*.[0-9]*.[0-9]*" --sort=-version:refname | grep -v '\-' | head -1); \
+          if [ -z "${VERSION}" ]; then VERSION="v0.1.0"; fi; \
+          TIMESTAMP=$(date +%Y%m%d%H%M%S); \
+          TAG="${VERSION}-dev.${TIMESTAMP}"; \
+          git tag -a "${TAG}" -m "Auto-sync from OSS repos"; \
+          git push origin "${TAG}"; \
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
         id: tag
 
       - name: Push changes
